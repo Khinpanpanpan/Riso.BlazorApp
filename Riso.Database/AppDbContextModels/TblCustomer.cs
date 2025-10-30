@@ -1,0 +1,25 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace Riso.Database.AppDbContextModels;
+
+public partial class TblCustomer
+{
+    public int CustomerId { get; set; }
+
+    public string CustomerName { get; set; } = null!;
+
+    public string CustomerEmail { get; set; } = null!;
+
+    public string CustomerPhone { get; set; } = null!;
+
+    public string CreatedBy { get; set; } = null!;
+
+    public DateTime CreatedDate { get; set; }
+
+    public string? ModifiedBy { get; set; }
+
+    public DateTime? ModifiedDate { get; set; }
+
+    public bool IsDelete { get; set; }
+}

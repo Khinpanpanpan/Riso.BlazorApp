@@ -1,0 +1,149 @@
+﻿@page "/discount"
+@inject AppDbContext db
+
+<PageTitle>Discount List</PageTitle>
+
+<h3>Discount List</h3>
+
+<div class="mb-3">
+    <label class="form-label">Product Id</label>
+    <input type="number" class="form-control" @bind="request.ProductId" placeholder="Enter product id" />
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Discount (%)</label>
+    <input type="number" step="0.01" class="form-control" @bind="request.DiscountPercentage" placeholder="Enter discount" />
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Start Date</label>
+    <input type="date" class="form-control" @bind="request.StartDate" />
+</div>
+
+<div class="mb-3">
+    <label class="form-label">End Date</label>
+    <input type="date" class="form-control" @bind="request.EndDate" />
+</div>
+
+<button class="btn btn-success me-2" @onclick="Save">@((request.DiscountId == 0) ? "Save" : "Update")</button>
+<button class="btn btn-outline-primary" @onclick="Reload">Reload</button>
+
+<hr />
+
+<table class="table table-bordered mt-3">
+    <thead>
+        <tr>
+            <th>No.</th>
+            <th>Product Id</th>
+            <th>Discount (%)</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (lst != null && lst.Any())
+        {
+            int count = 0;
+            foreach (var item in lst)
+            {
+                <tr>
+                    <td>@(++count)</td>
+                    <td>@item.ProductId</td>
+                    <td>@item.DiscountPercentage</td>
+                    <td>@item.StartDate.ToString("yyyy-MM-dd")</td>
+                    <td>@item.EndDate.ToString("yyyy-MM-dd")</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary me-1" @onclick="() => Edit(item)">Edit</button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => Delete(item.DiscountId)">Delete</button>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr><td colspan="6" class="text-center text-muted">No records found.</td></tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private TblDiscount request = new TblDiscount
+    {
+        StartDate = DateTime.Today,
+        EndDate = DateTime.Today.AddDays(7),
+        DiscountPercentage = 0
+    };
+    private List<TblDiscount> lst = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Reload();
+    }
+
+    private async Task Reload()
+    {
+        lst = await db.TblDiscounts
+            .OrderByDescending(x => x.DiscountId)
+            .ToListAsync();
+
+        // Reset form for new entry
+        request = new TblDiscount
+        {
+            StartDate = DateTime.Today,
+            EndDate = DateTime.Today.AddDays(7),
+            DiscountPercentage = 0
+        };
+    }
+
+    private async Task Save()
+    {
+        if (request.ProductId == 0 || request.DiscountPercentage <= 0)
+            return; // basic validation
+
+        if (request.DiscountId == 0)
+        {
+            request.CreatedDate = DateTime.Now;
+            db.TblDiscounts.Add(request);
+        }
+        else
+        {
+            var existing = await db.TblDiscounts.FindAsync(request.DiscountId);
+            if (existing != null)
+            {
+                existing.ProductId = request.ProductId;
+                existing.DiscountPercentage = request.DiscountPercentage;
+                existing.StartDate = request.StartDate;
+                existing.EndDate = request.EndDate;
+                existing.ModifiedDate = DateTime.Now;
+            }
+        }
+
+        await db.SaveChangesAsync();
+        await Reload();
+    }
+
+    private void Edit(TblDiscount item)
+    {
+        request = new TblDiscount
+        {
+            DiscountId = item.DiscountId,
+            ProductId = item.ProductId,
+            DiscountPercentage = item.DiscountPercentage,
+            StartDate = item.StartDate,
+            EndDate = item.EndDate,
+            CreatedDate = item.CreatedDate
+        };
+    }
+
+    private async Task Delete(int id)
+    {
+        var item = await db.TblDiscounts.FindAsync(id);
+        if (item != null)
+        {
+            db.TblDiscounts.Remove(item);
+            await db.SaveChangesAsync();
+            await Reload();
+        }
+    }
+}
