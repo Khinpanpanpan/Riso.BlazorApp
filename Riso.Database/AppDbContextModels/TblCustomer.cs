@@ -13,6 +13,14 @@ public partial class TblCustomer
 
     public string CustomerPhone { get; set; } = null!;
 
+    public string? Email { get; set; }
+
+    public string? Phone { get; set; }
+
+    public string? Address { get; set; }
+
+    public int? ProductId { get; set; }
+
     public string CreatedBy { get; set; } = null!;
 
     public DateTime CreatedDate { get; set; }
